@@ -1,0 +1,29 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #f4f4f5;
+  background: #16161a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  min-height: 100dvh;
+  padding: calc(env(safe-area-inset-top) + 24px) 16px
+    calc(env(safe-area-inset-bottom) + 24px);
+}
+
+h1 {
+  margin: 0 0 8px;
+}
+
+p {
+  margin: 0;
+  color: #a1a1aa;
+}
