@@ -49,16 +49,41 @@ export function setsSummary(list: WorkoutSet[]) {
     .join(', ')
 }
 
-// Прошлый результат ищем по названию: упражнение могло быть в другом плане
-export function lastResult(workouts: Workout[], name: string) {
+// Результаты ищем по названию: одно упражнение может быть в разных планах.
+// Возвращает записи от новых к старым.
+export function exerciseResults(workouts: Workout[], name: string) {
   const key = name.trim().toLowerCase()
-  for (const workout of [...workouts].reverse()) {
+  return [...workouts].reverse().flatMap((workout) => {
     const exercise = workout.exercises.find(
       (item) => item.name.trim().toLowerCase() === key,
     )
-    if (exercise) return { date: workout.date, sets: exercise.sets }
+    return exercise && exercise.sets.length > 0
+      ? [{ id: workout.id, date: workout.date, sets: exercise.sets }]
+      : []
+  })
+}
+
+export function lastResult(workouts: Workout[], name: string) {
+  return exerciseResults(workouts, name)[0] ?? null
+}
+
+function toNumber(value: string) {
+  return Number.parseFloat(value.replace(',', '.')) || 0
+}
+
+// Лучший подход: самый большой вес, при равном весе больше повторов
+export function bestResult(results: ReturnType<typeof exerciseResults>) {
+  let best: { date: string; set: WorkoutSet } | null = null
+  for (const result of results) {
+    for (const set of result.sets) {
+      const weightDiff = best ? toNumber(set.weight) - toNumber(best.set.weight) : 1
+      const repsDiff = best ? toNumber(set.reps) - toNumber(best.set.reps) : 0
+      if (weightDiff > 0 || (weightDiff === 0 && repsDiff > 0)) {
+        best = { date: result.date, set }
+      }
+    }
   }
-  return null
+  return best
 }
 
 export function formatDate(iso: string) {

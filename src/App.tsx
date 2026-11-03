@@ -3,6 +3,7 @@ import ConflictDialog from './components/ConflictDialog/ConflictDialog'
 import WelcomeModal from './components/WelcomeModal/WelcomeModal'
 import { useCloudSync } from './cloud/useCloudSync'
 import DayPage from './pages/DayPage/DayPage'
+import ExerciseProgressPage from './pages/ExerciseProgressPage/ExerciseProgressPage'
 import HistoryPage from './pages/HistoryPage/HistoryPage'
 import HomePage from './pages/HomePage/HomePage'
 import PlanPage from './pages/PlanPage/PlanPage'
@@ -31,6 +32,7 @@ type View =
   | { name: 'history' }
   | { name: 'workout' }
   | { name: 'workoutDetail'; workoutId: string }
+  | { name: 'exerciseProgress'; exerciseName: string; dayView: View }
   | { name: 'plan'; planId: string }
   | { name: 'day'; planId: string; dayId: string }
 
@@ -173,6 +175,17 @@ function App() {
       )
     }
 
+    if (view.name === 'exerciseProgress') {
+      const { dayView, exerciseName } = view
+      return (
+        <ExerciseProgressPage
+          exerciseName={exerciseName}
+          workouts={data.workouts}
+          onBack={() => setView(dayView)}
+        />
+      )
+    }
+
     if (view.name === 'history') {
       return (
         <HistoryPage
@@ -221,6 +234,9 @@ function App() {
           daysCount={plan.days.length}
           suggestions={[...new Set(names)]}
           onStartWorkout={() => startWorkout(plan, plan.days[dayIndex])}
+          onOpenProgress={(exerciseName) =>
+            setView({ name: 'exerciseProgress', exerciseName, dayView: view })
+          }
           onChange={(next) =>
             updatePlan({
               ...plan,

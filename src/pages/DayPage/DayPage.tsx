@@ -19,6 +19,7 @@ type DayPageProps = {
   suggestions: string[]
   onChange: (day: Day) => void
   onStartWorkout: () => void
+  onOpenProgress: (exerciseName: string) => void
   onDelete: () => void
   onBack: () => void
 }
@@ -31,6 +32,7 @@ function DayPage({
   suggestions,
   onChange,
   onStartWorkout,
+  onOpenProgress,
   onDelete,
   onBack,
 }: DayPageProps) {
@@ -69,6 +71,7 @@ function DayPage({
           onDelete={() =>
             changeExercises(day.exercises.filter((e) => e.id !== exercise.id))
           }
+          onOpenProgress={() => onOpenProgress(exercise.name)}
         />
       ))}
       <Button variant="dashed" icon={plusIcon} onClick={() => setIsSheetOpen(true)}>
