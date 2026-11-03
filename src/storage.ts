@@ -2,6 +2,7 @@ const DB_NAME = 'ggumiapp'
 const STORE_NAME = 'documents'
 const DATA_KEY = 'data'
 const SYNC_KEY = 'sync'
+const STOPWATCH_KEY = 'ggumiapp-stopwatch'
 const FILE_NAME = 'ggumiapp-data.json'
 
 export type WorkoutSet = {
@@ -46,6 +47,11 @@ export type AppData = {
   plans: Plan[]
   workouts: Workout[]
   activeWorkout: Workout | null
+}
+
+export type StopwatchState = {
+  startedAt: number | null
+  elapsed: number
 }
 
 export type SyncMeta = {
@@ -204,6 +210,25 @@ export async function loadData(): Promise<AppData | null> {
   void navigator.storage?.persist?.()
   const stored = await readValue(DATA_KEY)
   return stored ? normalizeData(stored) : null
+}
+
+// Секундомер относится к этому устройству, поэтому он лежит отдельно от данных
+export function loadStopwatch(): StopwatchState {
+  try {
+    const stored = localStorage.getItem(STOPWATCH_KEY)
+    if (stored) return JSON.parse(stored) as StopwatchState
+  } catch {
+    // Без сохранённого значения секундомер просто начнёт с нуля
+  }
+  return { startedAt: null, elapsed: 0 }
+}
+
+export function saveStopwatch(state: StopwatchState) {
+  try {
+    localStorage.setItem(STOPWATCH_KEY, JSON.stringify(state))
+  } catch {
+    // Секундомер продолжит работать, пока приложение открыто
+  }
 }
 
 export async function loadSyncMeta(): Promise<SyncMeta | null> {

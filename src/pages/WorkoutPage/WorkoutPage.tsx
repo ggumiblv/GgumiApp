@@ -4,6 +4,7 @@ import Button from '../../components/Button/Button'
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog'
 import PageTitle from '../../components/PageTitle/PageTitle'
 import SetList from '../../components/SetList/SetList'
+import Stopwatch from '../../components/Stopwatch/Stopwatch'
 import { formatDate, lastResult, setsSummary, workoutStats } from '../../format'
 import type { Workout } from '../../storage'
 import './WorkoutPage.scss'
@@ -14,6 +15,7 @@ type WorkoutPageProps = {
   onChange: (workout: Workout) => void
   onFinish: () => void
   onCancel: () => void
+  onStopwatchLimit: () => void
   onBack: () => void
 }
 
@@ -23,6 +25,7 @@ function WorkoutPage({
   onChange,
   onFinish,
   onCancel,
+  onStopwatchLimit,
   onBack,
 }: WorkoutPageProps) {
   const [isCancelOpen, setIsCancelOpen] = useState(false)
@@ -68,7 +71,8 @@ function WorkoutPage({
       <Button variant="ghost" onClick={() => setIsCancelOpen(true)}>
         Отменить тренировку
       </Button>
-      <div className="page-footer">
+      <div className="workout-footer">
+        <Stopwatch onLimit={onStopwatchLimit} />
         <Button onClick={onFinish}>Завершить тренировку</Button>
       </div>
 

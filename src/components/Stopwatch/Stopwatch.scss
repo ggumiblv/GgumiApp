@@ -1,0 +1,53 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.stopwatch {
+  @include card;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-s;
+  padding: 6px 6px 6px $space-m;
+
+  &__time {
+    @include stack(1px);
+  }
+
+  &__digits {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: $color-text-muted;
+  }
+
+  &.is-running &__digits {
+    color: $color-text;
+  }
+
+  &__controls {
+    display: flex;
+    gap: 6px;
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $control-height;
+    height: $control-height;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: $color-surface-raised;
+
+    &--main {
+      background: $color-text;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+}

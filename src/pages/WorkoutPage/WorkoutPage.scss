@@ -7,3 +7,21 @@
   padding: $space-s;
   overflow-wrap: anywhere;
 }
+
+// Панель прилегает к краям экрана, чтобы упражнения не просвечивали под ней
+.workout-footer {
+  @include stack($space-xs);
+  position: sticky;
+  bottom: 0;
+  margin: auto (-$space-m) calc(-1 * (env(safe-area-inset-bottom) + #{$space-m}));
+  padding: $space-s $space-m calc(env(safe-area-inset-bottom) + #{$space-m});
+  border-top: 1px solid $color-border;
+  background: $color-background;
+
+  @include tablet {
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 0;
+    padding-left: 0;
+  }
+}

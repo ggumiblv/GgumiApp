@@ -19,6 +19,7 @@ import {
   exportToFile,
   loadData,
   saveData,
+  saveStopwatch,
   touchPlan,
 } from './storage'
 import type { AppData, Day, Plan } from './storage'
@@ -115,6 +116,7 @@ function App() {
     if (data.activeWorkout) {
       setMessage('Сначала завершите текущую тренировку')
     } else {
+      saveStopwatch({ startedAt: null, elapsed: 0 })
       updateData({ ...data, activeWorkout: createWorkout(plan, day) })
     }
     setView({ name: 'workout' })
@@ -130,6 +132,9 @@ function App() {
     saveLocally(createEmptyData())
     setView(HOME)
   }
+
+  const handleStopwatchLimit = () =>
+    setMessage('Секундомер сброшен: прошло 15 минут')
 
   const handleImportError = () => setMessage('Не удалось прочитать файл')
 
@@ -170,6 +175,7 @@ function App() {
             updateData({ ...data, activeWorkout: null })
             setView(HOME)
           }}
+          onStopwatchLimit={handleStopwatchLimit}
           onBack={() => setView(HOME)}
         />
       )
