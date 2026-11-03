@@ -18,13 +18,6 @@
   }
 }
 
-.page-footer {
-  position: sticky;
-  bottom: calc(env(safe-area-inset-bottom) + #{$space-m});
-  margin-top: auto;
-  padding-top: $space-s;
-}
-
 .empty {
   @include stack;
   align-items: center;
@@ -32,4 +25,9 @@
   border: 1px dashed $color-border;
   border-radius: $radius-l;
   text-align: center;
+}
+
+.home-header__actions {
+  display: flex;
+  gap: $space-xs;
 }

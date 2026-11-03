@@ -3,13 +3,16 @@ import type { FormEvent } from 'react'
 import Button from '../Button/Button'
 import ImportInput from '../ImportInput/ImportInput'
 import TextInput from '../TextInput/TextInput'
+import AccountSheet from '../AccountSheet/AccountSheet'
+import { isCloudConfigured } from '../../cloud/firebaseConfig'
 import type { AppData } from '../../storage'
+import accountIcon from '../../assets/icons/account.svg'
 import dumbbellIcon from '../../assets/icons/dumbbell.svg'
 import plusIcon from '../../assets/icons/plus.svg'
 import uploadIcon from '../../assets/icons/upload.svg'
 import './WelcomeModal.scss'
 
-type Source = 'new' | 'file'
+type Source = 'new' | 'file' | 'account'
 
 type WelcomeModalProps = {
   onStart: (name: string) => void
@@ -20,18 +23,23 @@ type WelcomeModalProps = {
 function WelcomeModal({ onStart, onImport, onImportError }: WelcomeModalProps) {
   const [name, setName] = useState('')
   const [source, setSource] = useState<Source>('new')
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
   const trimmedName = name.trim()
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    if (source === 'file') fileInput.current?.click()
+    if (source === 'account') setIsAccountOpen(true)
+    else if (source === 'file') fileInput.current?.click()
     else if (trimmedName) onStart(trimmedName)
   }
 
   const sources = [
     { id: 'new', icon: plusIcon, title: 'Начать с нуля', hint: 'Создадите планы сами' },
     { id: 'file', icon: uploadIcon, title: 'Восстановить из файла', hint: 'Резервная копия .json' },
+    ...(isCloudConfigured
+      ? [{ id: 'account', icon: accountIcon, title: 'Войти в аккаунт', hint: 'Данные из облака' } as const]
+      : []),
   ] as const
 
   return (
@@ -42,8 +50,9 @@ function WelcomeModal({ onStart, onImport, onImportError }: WelcomeModalProps) {
         </span>
         <h2 id="welcome-title" className="title-large">Добро пожаловать</h2>
         <p className="muted">
-          Приложение работает без интернета. Данные хранятся только на этом
-          устройстве.
+          {isCloudConfigured
+            ? 'Приложение работает без интернета. Данные сохраняются на устройстве, а если войти в аккаунт — ещё и в облаке.'
+            : 'Приложение работает без интернета. Данные сохраняются на этом устройстве.'}
         </p>
         <form className="stack" onSubmit={handleSubmit}>
           <TextInput
@@ -84,6 +93,14 @@ function WelcomeModal({ onStart, onImport, onImportError }: WelcomeModalProps) {
           onImport={(data) => onImport({ ...data, name: data.name || trimmedName })}
           onError={onImportError}
         />
+        {isAccountOpen && (
+          <AccountSheet
+            onClose={() => {
+              setIsAccountOpen(false)
+              setSource('new')
+            }}
+          />
+        )}
       </div>
     </div>
   )

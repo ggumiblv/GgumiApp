@@ -6,7 +6,7 @@ type PageTitleProps = {
   eyebrow: string
   title: string
   stats: string
-  onEdit: () => void
+  onEdit?: () => void
 }
 
 function PageTitle({ eyebrow, title, stats, onEdit }: PageTitleProps) {
@@ -15,7 +15,9 @@ function PageTitle({ eyebrow, title, stats, onEdit }: PageTitleProps) {
       <span className="eyebrow">{eyebrow}</span>
       <div className="page-title__row">
         <h1>{title}</h1>
-        <IconButton icon={pencilIcon} label="Переименовать" onClick={onEdit} />
+        {onEdit && (
+          <IconButton icon={pencilIcon} label="Переименовать" onClick={onEdit} />
+        )}
       </div>
       <p className="muted small">{stats}</p>
     </header>

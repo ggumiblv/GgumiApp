@@ -1,15 +1,12 @@
 import { useState } from 'react'
-import Button from '../Button/Button'
 import IconButton from '../IconButton/IconButton'
 import ItemActions from '../ItemActions/ItemActions'
 import type { ActionsMode } from '../ItemActions/ItemActions'
-import SetRow from '../SetRow/SetRow'
+import SetList from '../SetList/SetList'
 import { exerciseSummary, plural } from '../../format'
-import { createSet } from '../../storage'
-import type { Exercise, WorkoutSet } from '../../storage'
+import type { Exercise } from '../../storage'
 import chevronIcon from '../../assets/icons/chevron-down.svg'
 import moreIcon from '../../assets/icons/more.svg'
-import plusIcon from '../../assets/icons/plus.svg'
 import './ExerciseCard.scss'
 
 type ExerciseCardProps = {
@@ -28,16 +25,6 @@ function ExerciseCard({
   onDelete,
 }: ExerciseCardProps) {
   const [actions, setActions] = useState<ActionsMode>(null)
-
-  function changeSets(sets: WorkoutSet[]) {
-    onChange({ ...exercise, sets })
-  }
-
-  function addSet() {
-    // Новый подход удобнее начинать со значений предыдущего
-    const last = exercise.sets.at(-1)
-    changeSets([...exercise.sets, createSet(last?.weight, last?.reps)])
-  }
 
   return (
     <section className="exercise">
@@ -67,28 +54,10 @@ function ExerciseCard({
 
       {isOpen && (
         <div className="exercise__body">
-          {exercise.sets.length > 0 && (
-            <div className="set-labels eyebrow">
-              <span>Вес, кг</span>
-              <span>Повторы</span>
-            </div>
-          )}
-          {exercise.sets.map((set, index) => (
-            <SetRow
-              key={set.id}
-              number={index + 1}
-              set={set}
-              onChange={(next) =>
-                changeSets(exercise.sets.map((s) => (s.id === set.id ? next : s)))
-              }
-              onDelete={() =>
-                changeSets(exercise.sets.filter((s) => s.id !== set.id))
-              }
-            />
-          ))}
-          <Button variant="ghost" icon={plusIcon} onClick={addSet}>
-            Добавить подход
-          </Button>
+          <SetList
+            sets={exercise.sets}
+            onChange={(sets) => onChange({ ...exercise, sets })}
+          />
         </div>
       )}
 

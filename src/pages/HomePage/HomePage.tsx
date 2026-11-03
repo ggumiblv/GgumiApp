@@ -8,6 +8,7 @@ import { formatUpdatedAt, greeting, planShortStats } from '../../format'
 import type { AppData } from '../../storage'
 import dumbbellIcon from '../../assets/icons/dumbbell.svg'
 import plusIcon from '../../assets/icons/plus-dark.svg'
+import historyIcon from '../../assets/icons/history.svg'
 import settingsIcon from '../../assets/icons/settings.svg'
 import './HomePage.scss'
 
@@ -16,9 +17,18 @@ type HomePageProps = {
   onCreatePlan: (name: string, daysCount: number) => void
   onOpenPlan: (id: string) => void
   onOpenSettings: () => void
+  onOpenHistory: () => void
+  onOpenWorkout: () => void
 }
 
-function HomePage({ data, onCreatePlan, onOpenPlan, onOpenSettings }: HomePageProps) {
+function HomePage({
+  data,
+  onCreatePlan,
+  onOpenPlan,
+  onOpenSettings,
+  onOpenHistory,
+  onOpenWorkout,
+}: HomePageProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const hasPlans = data.plans.length > 0
 
@@ -29,8 +39,20 @@ function HomePage({ data, onCreatePlan, onOpenPlan, onOpenSettings }: HomePagePr
           <p className="muted">{greeting()}</p>
           <h1>{data.name}</h1>
         </div>
-        <IconButton icon={settingsIcon} label="Настройки" round onClick={onOpenSettings} />
+        <div className="home-header__actions">
+          <IconButton icon={historyIcon} label="История тренировок" round onClick={onOpenHistory} />
+          <IconButton icon={settingsIcon} label="Настройки" round onClick={onOpenSettings} />
+        </div>
       </header>
+
+      {data.activeWorkout && (
+        <ListCard
+          eyebrow="Тренировка идёт"
+          title={data.activeWorkout.dayName}
+          subtitle="Продолжить"
+          onClick={onOpenWorkout}
+        />
+      )}
 
       <SectionTitle title="Тренировочные планы" count={data.plans.length} />
 

@@ -1,0 +1,15 @@
+@use '../../assets/styles/variables' as *;
+
+.set-labels {
+  display: grid;
+  grid-template-columns: $set-grid;
+  column-gap: $space-2xs;
+
+  span:first-child {
+    grid-column: 2;
+  }
+
+  span:last-child {
+    grid-column: 4;
+  }
+}

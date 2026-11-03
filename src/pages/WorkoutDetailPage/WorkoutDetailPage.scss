@@ -1,0 +1,9 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.workout-result {
+  @include stack($space-2xs);
+  @include card;
+  padding: $space-s $space-m;
+  overflow-wrap: anywhere;
+}

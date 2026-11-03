@@ -1,4 +1,4 @@
-import type { Day, Exercise, Plan } from './storage'
+import type { Day, Exercise, Plan, Workout, WorkoutSet } from './storage'
 
 const pluralRules = new Intl.PluralRules('ru')
 
@@ -39,6 +39,28 @@ export function exerciseSummary(exercise: Exercise) {
   return `${sets(exercise.sets.length)} · ${weight} × ${first.reps || '—'}`
 }
 
+export function workoutStats(workout: Workout) {
+  return `${exercises(workout.exercises.length)} · ${sets(countSets(workout.exercises))}`
+}
+
+export function setsSummary(list: WorkoutSet[]) {
+  return list
+    .map((set) => `${set.weight ? `${set.weight} кг` : 'свой вес'} × ${set.reps || '—'}`)
+    .join(', ')
+}
+
+// Прошлый результат ищем по названию: упражнение могло быть в другом плане
+export function lastResult(workouts: Workout[], name: string) {
+  const key = name.trim().toLowerCase()
+  for (const workout of [...workouts].reverse()) {
+    const exercise = workout.exercises.find(
+      (item) => item.name.trim().toLowerCase() === key,
+    )
+    if (exercise) return { date: workout.date, sets: exercise.sets }
+  }
+  return null
+}
+
 export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru', {
     day: 'numeric',
@@ -49,6 +71,14 @@ export function formatDate(iso: string) {
 export function formatUpdatedAt(iso: string) {
   const isToday = new Date(iso).toDateString() === new Date().toDateString()
   return `Изменён ${isToday ? 'сегодня' : formatDate(iso)}`
+}
+
+export function formatFullDate(iso: string) {
+  return new Date(iso).toLocaleDateString('ru', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 export function greeting() {

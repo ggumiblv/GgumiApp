@@ -4,18 +4,26 @@ type TextInputProps = {
   label: string
   value: string
   placeholder?: string
+  type?: 'text' | 'email' | 'password'
+  autoComplete?: string
   onChange: (value: string) => void
   onBlur?: () => void
 }
 
-function TextInput({ label, onChange, ...props }: TextInputProps) {
+function TextInput({
+  label,
+  onChange,
+  type = 'text',
+  autoComplete = 'off',
+  ...props
+}: TextInputProps) {
   return (
     <label className="field">
       <span className="field__label">{label}</span>
       <input
         className="text-input"
-        type="text"
-        autoComplete="off"
+        type={type}
+        autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
         {...props}
       />

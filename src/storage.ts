@@ -1,6 +1,7 @@
 const DB_NAME = 'ggumiapp'
 const STORE_NAME = 'documents'
 const DATA_KEY = 'data'
+const SYNC_KEY = 'sync'
 const FILE_NAME = 'ggumiapp-data.json'
 
 export type WorkoutSet = {
@@ -28,15 +29,38 @@ export type Plan = {
   days: Day[]
 }
 
+export type Workout = {
+  id: string
+  date: string
+  planName: string
+  dayName: string
+  exercises: Exercise[]
+}
+
 export type AppData = {
   version: number
   name: string
   lastBackupAt: string | null
   plans: Plan[]
+  workouts: Workout[]
+  activeWorkout: Workout | null
+}
+
+export type SyncMeta = {
+  uid: string
+  rev: string | null
+  isDirty: boolean
 }
 
 export function createEmptyData(): AppData {
-  return { version: 2, name: '', lastBackupAt: null, plans: [] }
+  return {
+    version: 3,
+    name: '',
+    lastBackupAt: null,
+    plans: [],
+    workouts: [],
+    activeWorkout: null,
+  }
 }
 
 export function createSet(weight = '', reps = ''): WorkoutSet {
@@ -56,8 +80,26 @@ export function createPlan(name: string, daysCount: number): Plan {
   }
 }
 
+export function createWorkout(planName: string, day: Day): Workout {
+  return {
+    id: crypto.randomUUID(),
+    date: new Date().toISOString(),
+    planName,
+    dayName: day.name,
+    exercises: copyExercises(day.exercises),
+  }
+}
+
 export function touchPlan(plan: Plan): Plan {
   return { ...plan, updatedAt: new Date().toISOString() }
+}
+
+function copyExercises(exercises: Exercise[]): Exercise[] {
+  return exercises.map((exercise) => ({
+    ...exercise,
+    id: crypto.randomUUID(),
+    sets: exercise.sets.map((set) => ({ ...set, id: crypto.randomUUID() })),
+  }))
 }
 
 export function duplicatePlan(plan: Plan): Plan {
@@ -69,11 +111,7 @@ export function duplicatePlan(plan: Plan): Plan {
     days: plan.days.map((day) => ({
       ...day,
       id: crypto.randomUUID(),
-      exercises: day.exercises.map((exercise) => ({
-        ...exercise,
-        id: crypto.randomUUID(),
-        sets: exercise.sets.map((set) => ({ ...set, id: crypto.randomUUID() })),
-      })),
+      exercises: copyExercises(day.exercises),
     })),
   }
 }
@@ -82,21 +120,25 @@ function isList(value: unknown): value is Record<string, unknown>[] {
   return Array.isArray(value)
 }
 
-// Принимает и файлы старой версии без имени и планов, недостающие поля заполняются
-function normalizeData(raw: unknown): AppData {
-  const data = { ...createEmptyData(), ...(raw as Partial<AppData>), version: 2 }
+function hasValidExercises(item: Record<string, unknown>) {
+  return (
+    isList(item.exercises) &&
+    item.exercises.every((exercise) => isList(exercise.sets))
+  )
+}
+
+// Принимает и файлы старых версий, недостающие поля заполняются
+export function normalizeData(raw: unknown): AppData {
+  const data = { ...createEmptyData(), ...(raw as Partial<AppData>), version: 3 }
   const isValid =
     typeof data.name === 'string' &&
     isList(data.plans) &&
     data.plans.every(
-      (plan) =>
-        isList(plan.days) &&
-        plan.days.every(
-          (day) =>
-            isList(day.exercises) &&
-            day.exercises.every((exercise) => isList(exercise.sets)),
-        ),
-    )
+      (plan) => isList(plan.days) && plan.days.every(hasValidExercises),
+    ) &&
+    isList(data.workouts) &&
+    data.workouts.every(hasValidExercises) &&
+    (data.activeWorkout === null || hasValidExercises(data.activeWorkout))
   if (!isValid) throw new Error('Unexpected data format')
   return data
 }
@@ -114,31 +156,39 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise
 }
 
-export async function loadData(): Promise<AppData | null> {
+async function readValue(key: string): Promise<unknown> {
   const db = await openDb()
-  // Просим браузер не удалять данные при нехватке места, гарантий это не даёт
-  void navigator.storage?.persist?.()
   return new Promise((resolve, reject) => {
-    const request = db
-      .transaction(STORE_NAME)
-      .objectStore(STORE_NAME)
-      .get(DATA_KEY)
-    request.onsuccess = () => {
-      try {
-        resolve(request.result ? normalizeData(request.result) : null)
-      } catch (error) {
-        reject(error)
-      }
-    }
+    const request = db.transaction(STORE_NAME).objectStore(STORE_NAME).get(key)
+    request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
   })
 }
 
-export async function saveData(data: AppData): Promise<void> {
+export async function loadData(): Promise<AppData | null> {
+  // Просим браузер не удалять данные при нехватке места, гарантий это не даёт
+  void navigator.storage?.persist?.()
+  const stored = await readValue(DATA_KEY)
+  return stored ? normalizeData(stored) : null
+}
+
+export async function loadSyncMeta(): Promise<SyncMeta | null> {
+  return ((await readValue(SYNC_KEY)) as SyncMeta | undefined) ?? null
+}
+
+export function saveData(data: AppData): Promise<void> {
+  return writeValue(DATA_KEY, data)
+}
+
+export function saveSyncMeta(meta: SyncMeta | null): Promise<void> {
+  return writeValue(SYNC_KEY, meta)
+}
+
+async function writeValue(key: string, value: unknown): Promise<void> {
   const db = await openDb()
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite')
-    transaction.objectStore(STORE_NAME).put(data, DATA_KEY)
+    transaction.objectStore(STORE_NAME).put(value, key)
     transaction.oncomplete = () => resolve()
     transaction.onerror = () => reject(transaction.error)
     transaction.onabort = () => reject(transaction.error)

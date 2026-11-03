@@ -36,3 +36,9 @@
   padding: $space-l;
   background: $color-surface;
 }
+
+@mixin card {
+  border: 1px solid $color-border;
+  border-radius: $radius-m;
+  background: $color-surface;
+}

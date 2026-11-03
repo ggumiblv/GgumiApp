@@ -18,6 +18,7 @@ type DayPageProps = {
   daysCount: number
   suggestions: string[]
   onChange: (day: Day) => void
+  onStartWorkout: () => void
   onDelete: () => void
   onBack: () => void
 }
@@ -29,6 +30,7 @@ function DayPage({
   daysCount,
   suggestions,
   onChange,
+  onStartWorkout,
   onDelete,
   onBack,
 }: DayPageProps) {
@@ -74,6 +76,12 @@ function DayPage({
       <Button variant="dashed" icon={plusIcon} onClick={() => setIsSheetOpen(true)}>
         Добавить упражнение
       </Button>
+
+      {day.exercises.length > 0 && (
+        <div className="page-footer">
+          <Button onClick={onStartWorkout}>Начать тренировку</Button>
+        </div>
+      )}
 
       {isSheetOpen && (
         <NewExerciseSheet

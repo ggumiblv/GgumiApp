@@ -1,19 +1,25 @@
 import { useEffect, useState } from 'react'
+import ConflictDialog from './components/ConflictDialog/ConflictDialog'
 import WelcomeModal from './components/WelcomeModal/WelcomeModal'
+import { useCloudSync } from './cloud/useCloudSync'
 import DayPage from './pages/DayPage/DayPage'
+import HistoryPage from './pages/HistoryPage/HistoryPage'
 import HomePage from './pages/HomePage/HomePage'
 import PlanPage from './pages/PlanPage/PlanPage'
 import SettingsPage from './pages/SettingsPage/SettingsPage'
+import WorkoutDetailPage from './pages/WorkoutDetailPage/WorkoutDetailPage'
+import WorkoutPage from './pages/WorkoutPage/WorkoutPage'
 import {
   createEmptyData,
   createPlan,
+  createWorkout,
   duplicatePlan,
   exportToFile,
   loadData,
   saveData,
   touchPlan,
 } from './storage'
-import type { AppData, Plan } from './storage'
+import type { AppData, Day, Plan } from './storage'
 import './App.scss'
 
 type Status = 'loading' | 'ready' | 'failed'
@@ -21,6 +27,9 @@ type Status = 'loading' | 'ready' | 'failed'
 type View =
   | { name: 'home' }
   | { name: 'settings' }
+  | { name: 'history' }
+  | { name: 'workout' }
+  | { name: 'workoutDetail'; workoutId: string }
   | { name: 'plan'; planId: string }
   | { name: 'day'; planId: string; dayId: string }
 
@@ -31,6 +40,8 @@ function App() {
   const [data, setData] = useState<AppData>(createEmptyData)
   const [view, setView] = useState<View>(HOME)
   const [message, setMessage] = useState('')
+
+  const cloud = useCloudSync(data, status === 'ready', applyCloudData)
 
   useEffect(() => {
     loadData()
@@ -47,9 +58,19 @@ function App() {
     return () => clearTimeout(timer)
   }, [message])
 
-  function updateData(next: AppData) {
+  function saveLocally(next: AppData) {
     setData(next)
     saveData(next).catch(() => setMessage('Не удалось сохранить данные'))
+  }
+
+  function updateData(next: AppData) {
+    saveLocally(next)
+    cloud.markChanged(next)
+  }
+
+  function applyCloudData(next: AppData) {
+    saveLocally(next)
+    setView(HOME)
   }
 
   function updatePlan(next: Plan) {
@@ -86,6 +107,27 @@ function App() {
       .catch(() => setMessage('Не удалось сохранить файл'))
   }
 
+  function startWorkout(planName: string, day: Day) {
+    // Незавершённая тренировка важнее новой, её легко потерять
+    if (data.activeWorkout) {
+      setMessage('Сначала завершите текущую тренировку')
+    } else {
+      updateData({ ...data, activeWorkout: createWorkout(planName, day) })
+    }
+    setView({ name: 'workout' })
+  }
+
+  async function handleDeleteAll() {
+    try {
+      await cloud.deleteCloudData()
+    } catch {
+      setMessage('Нужен интернет, чтобы удалить данные из аккаунта')
+      return
+    }
+    saveLocally(createEmptyData())
+    setView(HOME)
+  }
+
   const handleImportError = () => setMessage('Не удалось прочитать файл')
 
   function renderPage() {
@@ -93,12 +135,35 @@ function App() {
       return (
         <SettingsPage
           data={data}
+          cloud={cloud}
           onRename={(name) => updateData({ ...data, name })}
           onExport={handleExport}
           onImport={handleImport}
           onImportError={handleImportError}
-          onDeleteAll={() => {
-            updateData(createEmptyData())
+          onDeleteAll={() => void handleDeleteAll()}
+          onBack={() => setView(HOME)}
+        />
+      )
+    }
+
+    if (view.name === 'workout' && data.activeWorkout) {
+      const active = data.activeWorkout
+      return (
+        <WorkoutPage
+          workout={active}
+          history={data.workouts}
+          onChange={(activeWorkout) => updateData({ ...data, activeWorkout })}
+          onFinish={() => {
+            updateData({
+              ...data,
+              activeWorkout: null,
+              workouts: [...data.workouts, active],
+            })
+            setView({ name: 'workoutDetail', workoutId: active.id })
+            setMessage('Тренировка сохранена')
+          }}
+          onCancel={() => {
+            updateData({ ...data, activeWorkout: null })
             setView(HOME)
           }}
           onBack={() => setView(HOME)}
@@ -106,8 +171,38 @@ function App() {
       )
     }
 
+    if (view.name === 'history') {
+      return (
+        <HistoryPage
+          workouts={data.workouts}
+          onOpen={(workoutId) => setView({ name: 'workoutDetail', workoutId })}
+          onBack={() => setView(HOME)}
+        />
+      )
+    }
+
+    if (view.name === 'workoutDetail') {
+      const workout = data.workouts.find((w) => w.id === view.workoutId)
+      if (workout) {
+        return (
+          <WorkoutDetailPage
+            workout={workout}
+            onDelete={() => {
+              updateData({
+                ...data,
+                workouts: data.workouts.filter((w) => w.id !== workout.id),
+              })
+              setView({ name: 'history' })
+            }}
+            onBack={() => setView({ name: 'history' })}
+          />
+        )
+      }
+    }
+
     const plan =
-      view.name !== 'home' && data.plans.find((p) => p.id === view.planId)
+      (view.name === 'plan' || view.name === 'day') &&
+      data.plans.find((p) => p.id === view.planId)
 
     if (plan && view.name === 'day') {
       const dayIndex = plan.days.findIndex((d) => d.id === view.dayId)
@@ -123,6 +218,7 @@ function App() {
           dayNumber={dayIndex + 1}
           daysCount={plan.days.length}
           suggestions={[...new Set(names)]}
+          onStartWorkout={() => startWorkout(plan.name, plan.days[dayIndex])}
           onChange={(next) =>
             updatePlan({
               ...plan,
@@ -163,6 +259,8 @@ function App() {
         onCreatePlan={(name, daysCount) => addPlan(createPlan(name, daysCount))}
         onOpenPlan={(planId) => setView({ name: 'plan', planId })}
         onOpenSettings={() => setView({ name: 'settings' })}
+        onOpenHistory={() => setView({ name: 'history' })}
+        onOpenWorkout={() => setView({ name: 'workout' })}
       />
     )
   }
@@ -180,6 +278,13 @@ function App() {
           />
         )}
       </div>
+      {cloud.conflict && (
+        <ConflictDialog
+          cloudDate={cloud.conflict.rev}
+          onKeepLocal={cloud.keepLocal}
+          onUseCloud={cloud.useCloudVersion}
+        />
+      )}
       {message && (
         <p className="toast" role="status">
           {message}

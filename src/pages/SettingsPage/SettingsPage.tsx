@@ -6,7 +6,11 @@ import ImportInput from '../../components/ImportInput/ImportInput'
 import MenuRow from '../../components/MenuRow/MenuRow'
 import TextInput from '../../components/TextInput/TextInput'
 import { formatDate } from '../../format'
+import AccountSheet from '../../components/AccountSheet/AccountSheet'
+import { isCloudConfigured } from '../../cloud/firebaseConfig'
+import type { CloudSync } from '../../cloud/useCloudSync'
 import type { AppData } from '../../storage'
+import accountIcon from '../../assets/icons/account.svg'
 import calendarIcon from '../../assets/icons/calendar.svg'
 import chevronIcon from '../../assets/icons/chevron-right.svg'
 import downloadIcon from '../../assets/icons/download.svg'
@@ -14,8 +18,16 @@ import trashIcon from '../../assets/icons/trash-red.svg'
 import uploadIcon from '../../assets/icons/upload.svg'
 import './SettingsPage.scss'
 
+const SYNC_LABELS: Record<CloudSync['status'], string> = {
+  idle: 'Копия сохранена',
+  saving: 'Сохраняем копию…',
+  offline: 'Нет интернета, копия сохранится позже',
+  error: 'Не удалось сохранить копию',
+}
+
 type SettingsPageProps = {
   data: AppData
+  cloud: CloudSync
   onRename: (name: string) => void
   onExport: () => void
   onImport: (data: AppData) => void
@@ -26,6 +38,7 @@ type SettingsPageProps = {
 
 function SettingsPage({
   data,
+  cloud,
   onRename,
   onExport,
   onImport,
@@ -34,7 +47,8 @@ function SettingsPage({
   onBack,
 }: SettingsPageProps) {
   const [name, setName] = useState(data.name)
-  const [dialog, setDialog] = useState<'import' | 'delete' | null>(null)
+  const [dialog, setDialog] = useState<'import' | 'delete' | 'signOut' | null>(null)
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
   function handleNameChange(value: string) {
@@ -55,6 +69,30 @@ function SettingsPage({
         onChange={handleNameChange}
         onBlur={() => setName(data.name)}
       />
+
+      {isCloudConfigured && (
+        <>
+          <span className="eyebrow">Аккаунт</span>
+          <div className="menu">
+            {cloud.user ? (
+              <MenuRow
+                icon={accountIcon}
+                label={cloud.user.email}
+                hint={`${SYNC_LABELS[cloud.status]} · нажмите, чтобы выйти`}
+                onClick={() => setDialog('signOut')}
+              />
+            ) : (
+              <MenuRow
+                icon={accountIcon}
+                label="Войти или создать аккаунт"
+                hint="Данные сохранятся, даже если удалить приложение"
+                trailingIcon={chevronIcon}
+                onClick={() => setIsAccountOpen(true)}
+              />
+            )}
+          </div>
+        </>
+      )}
 
       <span className="eyebrow">Данные</span>
       <div className="menu">
@@ -81,8 +119,11 @@ function SettingsPage({
       <div className="note">
         <img src={calendarIcon} alt="" />
         <p className="muted small">
-          Данные хранятся только на этом устройстве. Сохраняйте копию раз в
-          неделю — так ничего не потеряется.
+          {cloud.user
+            ? 'Данные сохраняются на устройстве и автоматически копируются в ваш аккаунт, когда есть интернет.'
+            : isCloudConfigured
+              ? 'Данные сохраняются на устройстве. Войдите в аккаунт или сохраняйте копию раз в неделю — так ничего не потеряется.'
+              : 'Данные сохраняются на устройстве. Сохраняйте копию раз в неделю — так ничего не потеряется.'}
         </p>
       </div>
 
@@ -108,10 +149,30 @@ function SettingsPage({
         />
       )}
 
+      {dialog === 'signOut' && (
+        <ConfirmDialog
+          title="Выйти из аккаунта?"
+          text="Данные останутся на этом устройстве, но перестанут копироваться в облако."
+          confirmLabel="Выйти"
+          danger={false}
+          onConfirm={() => {
+            setDialog(null)
+            void cloud.signOut()
+          }}
+          onCancel={() => setDialog(null)}
+        />
+      )}
+
+      {isAccountOpen && <AccountSheet onClose={() => setIsAccountOpen(false)} />}
+
       {dialog === 'delete' && (
         <ConfirmDialog
           title="Удалить все данные?"
-          text="Имя и все планы будут удалены. Отменить нельзя — если сомневаетесь, сначала сохраните копию."
+          text={
+            cloud.user
+              ? 'Имя, планы и история будут удалены с устройства и из вашего аккаунта. Отменить нельзя — если сомневаетесь, сначала сохраните копию.'
+              : 'Имя, планы и история будут удалены. Отменить нельзя — если сомневаетесь, сначала сохраните копию.'
+          }
           confirmLabel="Удалить всё"
           onConfirm={onDeleteAll}
           onCancel={() => setDialog(null)}
