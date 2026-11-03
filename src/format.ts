@@ -63,6 +63,20 @@ export function exerciseResults(workouts: Workout[], name: string) {
   })
 }
 
+// Названия выполненных упражнений без повторов, сначала недавние
+export function performedExerciseNames(workouts: Workout[]) {
+  const names = new Map<string, string>()
+  for (const workout of [...workouts].reverse()) {
+    for (const exercise of workout.exercises) {
+      const key = exercise.name.trim().toLowerCase()
+      if (exercise.sets.length > 0 && !names.has(key)) {
+        names.set(key, exercise.name.trim())
+      }
+    }
+  }
+  return [...names.values()]
+}
+
 export function lastResult(workouts: Workout[], name: string) {
   return exerciseResults(workouts, name)[0] ?? null
 }

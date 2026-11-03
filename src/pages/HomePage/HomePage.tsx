@@ -6,6 +6,7 @@ import NewPlanSheet from '../../components/NewPlanSheet/NewPlanSheet'
 import SectionTitle from '../../components/SectionTitle/SectionTitle'
 import { formatUpdatedAt, greeting, planShortStats } from '../../format'
 import type { AppData } from '../../storage'
+import chartIcon from '../../assets/icons/chart.svg'
 import dumbbellIcon from '../../assets/icons/dumbbell.svg'
 import plusIcon from '../../assets/icons/plus-dark.svg'
 import historyIcon from '../../assets/icons/history.svg'
@@ -18,6 +19,7 @@ type HomePageProps = {
   onOpenPlan: (id: string) => void
   onOpenSettings: () => void
   onOpenHistory: () => void
+  onOpenProgress: () => void
   onOpenWorkout: () => void
 }
 
@@ -27,6 +29,7 @@ function HomePage({
   onOpenPlan,
   onOpenSettings,
   onOpenHistory,
+  onOpenProgress,
   onOpenWorkout,
 }: HomePageProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -40,6 +43,7 @@ function HomePage({
           <h1>{data.name}</h1>
         </div>
         <div className="home-header__actions">
+          <IconButton icon={chartIcon} label="Прогресс упражнений" round onClick={onOpenProgress} />
           <IconButton icon={historyIcon} label="История тренировок" round onClick={onOpenHistory} />
           <IconButton icon={settingsIcon} label="Настройки" round onClick={onOpenSettings} />
         </div>

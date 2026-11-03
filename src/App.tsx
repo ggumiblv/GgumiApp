@@ -7,6 +7,7 @@ import ExerciseProgressPage from './pages/ExerciseProgressPage/ExerciseProgressP
 import HistoryPage from './pages/HistoryPage/HistoryPage'
 import HomePage from './pages/HomePage/HomePage'
 import PlanPage from './pages/PlanPage/PlanPage'
+import ProgressListPage from './pages/ProgressListPage/ProgressListPage'
 import SettingsPage from './pages/SettingsPage/SettingsPage'
 import WorkoutDetailPage from './pages/WorkoutDetailPage/WorkoutDetailPage'
 import WorkoutPage from './pages/WorkoutPage/WorkoutPage'
@@ -33,7 +34,8 @@ type View =
   | { name: 'history' }
   | { name: 'workout' }
   | { name: 'workoutDetail'; workoutId: string }
-  | { name: 'exerciseProgress'; exerciseName: string; dayView: View }
+  | { name: 'progress' }
+  | { name: 'exerciseProgress'; exerciseName: string; backView: View }
   | { name: 'plan'; planId: string }
   | { name: 'day'; planId: string; dayId: string }
 
@@ -181,13 +183,25 @@ function App() {
       )
     }
 
+    if (view.name === 'progress') {
+      return (
+        <ProgressListPage
+          workouts={data.workouts}
+          onOpen={(exerciseName) =>
+            setView({ name: 'exerciseProgress', exerciseName, backView: view })
+          }
+          onBack={() => setView(HOME)}
+        />
+      )
+    }
+
     if (view.name === 'exerciseProgress') {
-      const { dayView, exerciseName } = view
+      const { backView, exerciseName } = view
       return (
         <ExerciseProgressPage
           exerciseName={exerciseName}
           workouts={data.workouts}
-          onBack={() => setView(dayView)}
+          onBack={() => setView(backView)}
         />
       )
     }
@@ -241,7 +255,7 @@ function App() {
           suggestions={[...new Set(names)]}
           onStartWorkout={() => startWorkout(plan, plan.days[dayIndex])}
           onOpenProgress={(exerciseName) =>
-            setView({ name: 'exerciseProgress', exerciseName, dayView: view })
+            setView({ name: 'exerciseProgress', exerciseName, backView: view })
           }
           onChange={(next) =>
             updatePlan({
@@ -284,6 +298,7 @@ function App() {
         onOpenPlan={(planId) => setView({ name: 'plan', planId })}
         onOpenSettings={() => setView({ name: 'settings' })}
         onOpenHistory={() => setView({ name: 'history' })}
+        onOpenProgress={() => setView({ name: 'progress' })}
         onOpenWorkout={() => setView({ name: 'workout' })}
       />
     )
