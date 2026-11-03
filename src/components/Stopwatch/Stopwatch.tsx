@@ -6,7 +6,8 @@ import playIcon from '../../assets/icons/play-dark.svg'
 import resetIcon from '../../assets/icons/reset.svg'
 import './Stopwatch.scss'
 
-const LIMIT = 15 * 60 * 1000
+// Последнее показанное значение — 59:59
+const LIMIT = 60 * 60 * 1000
 const STOPPED: StopwatchState = { startedAt: null, elapsed: 0 }
 
 // Время считаем от момента старта: на заблокированном телефоне таймеры не работают

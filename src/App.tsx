@@ -41,6 +41,11 @@ type View =
 
 const HOME: View = { name: 'home' }
 
+type HistoryEntry = {
+  view: View
+  from: View | null
+}
+
 function App() {
   const [status, setStatus] = useState<Status>('loading')
   const [data, setData] = useState<AppData>(createEmptyData)
@@ -48,6 +53,39 @@ function App() {
   const [message, setMessage] = useState('')
 
   const cloud = useCloudSync(data, status === 'ready', applyCloudData)
+
+  // Экраны записаны в историю браузера, поэтому работает системная кнопка «Назад»
+  useEffect(() => {
+    window.history.replaceState({ view: HOME, from: null }, '')
+
+    function handlePopState(event: PopStateEvent) {
+      setView((event.state as HistoryEntry | null)?.view ?? HOME)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  function goTo(next: View) {
+    window.history.pushState({ view: next, from: view }, '')
+    setView(next)
+  }
+
+  function replaceView(next: View) {
+    const from = (window.history.state as HistoryEntry | null)?.from ?? null
+    window.history.replaceState({ view: next, from }, '')
+    setView(next)
+  }
+
+  // Кнопка в приложении: если родительский экран был предыдущим, просто шаг назад
+  function goBackTo(target: View) {
+    const from = (window.history.state as HistoryEntry | null)?.from
+    if (JSON.stringify(from) === JSON.stringify(target)) {
+      window.history.back()
+    } else {
+      replaceView(target)
+    }
+  }
 
   useEffect(() => {
     loadData()
@@ -76,7 +114,7 @@ function App() {
 
   function applyCloudData(next: AppData) {
     saveLocally(next)
-    setView(HOME)
+    replaceView(HOME)
   }
 
   function updatePlan(next: Plan) {
@@ -89,17 +127,17 @@ function App() {
 
   function deletePlan(id: string) {
     updateData({ ...data, plans: data.plans.filter((p) => p.id !== id) })
-    setView(HOME)
+    goBackTo(HOME)
   }
 
   function addPlan(plan: Plan) {
     updateData({ ...data, plans: [...data.plans, plan] })
-    setView({ name: 'plan', planId: plan.id })
+    goTo({ name: 'plan', planId: plan.id })
   }
 
   function handleImport(next: AppData) {
     updateData(next)
-    setView(HOME)
+    replaceView(HOME)
     setMessage(next.name ? 'Данные восстановлены' : 'Введите имя, чтобы продолжить')
   }
 
@@ -121,7 +159,7 @@ function App() {
       saveStopwatch({ startedAt: null, elapsed: 0 })
       updateData({ ...data, activeWorkout: createWorkout(plan, day) })
     }
-    setView({ name: 'workout' })
+    goTo({ name: 'workout' })
   }
 
   async function handleDeleteAll() {
@@ -132,11 +170,11 @@ function App() {
       return
     }
     saveLocally(createEmptyData())
-    setView(HOME)
+    replaceView(HOME)
   }
 
   const handleStopwatchLimit = () =>
-    setMessage('Секундомер сброшен: прошло 15 минут')
+    setMessage('Секундомер сброшен: прошёл час')
 
   const handleImportError = () => setMessage('Не удалось прочитать файл')
 
@@ -151,7 +189,7 @@ function App() {
           onImport={handleImport}
           onImportError={handleImportError}
           onDeleteAll={() => void handleDeleteAll()}
-          onBack={() => setView(HOME)}
+          onBack={() => goBackTo(HOME)}
         />
       )
     }
@@ -170,15 +208,15 @@ function App() {
               workouts: [...data.workouts, active],
               plans: applyWorkoutToPlans(data.plans, active),
             })
-            setView({ name: 'workoutDetail', workoutId: active.id })
+            replaceView({ name: 'workoutDetail', workoutId: active.id })
             setMessage('Тренировка сохранена')
           }}
           onCancel={() => {
             updateData({ ...data, activeWorkout: null })
-            setView(HOME)
+            goBackTo(HOME)
           }}
           onStopwatchLimit={handleStopwatchLimit}
-          onBack={() => setView(HOME)}
+          onBack={() => goBackTo(HOME)}
         />
       )
     }
@@ -188,9 +226,9 @@ function App() {
         <ProgressListPage
           workouts={data.workouts}
           onOpen={(exerciseName) =>
-            setView({ name: 'exerciseProgress', exerciseName, backView: view })
+            goTo({ name: 'exerciseProgress', exerciseName, backView: view })
           }
-          onBack={() => setView(HOME)}
+          onBack={() => goBackTo(HOME)}
         />
       )
     }
@@ -201,7 +239,7 @@ function App() {
         <ExerciseProgressPage
           exerciseName={exerciseName}
           workouts={data.workouts}
-          onBack={() => setView(backView)}
+          onBack={() => goBackTo(backView)}
         />
       )
     }
@@ -210,8 +248,8 @@ function App() {
       return (
         <HistoryPage
           workouts={data.workouts}
-          onOpen={(workoutId) => setView({ name: 'workoutDetail', workoutId })}
-          onBack={() => setView(HOME)}
+          onOpen={(workoutId) => goTo({ name: 'workoutDetail', workoutId })}
+          onBack={() => goBackTo(HOME)}
         />
       )
     }
@@ -227,9 +265,9 @@ function App() {
                 ...data,
                 workouts: data.workouts.filter((w) => w.id !== workout.id),
               })
-              setView({ name: 'history' })
+              goBackTo({ name: 'history' })
             }}
-            onBack={() => setView({ name: 'history' })}
+            onBack={() => goBackTo({ name: 'history' })}
           />
         )
       }
@@ -239,7 +277,8 @@ function App() {
       (view.name === 'plan' || view.name === 'day') &&
       data.plans.find((p) => p.id === view.planId)
 
-    if (plan && view.name === 'day') {
+    // В истории может остаться экран уже удалённого дня
+    if (plan && view.name === 'day' && plan.days.some((d) => d.id === view.dayId)) {
       const dayIndex = plan.days.findIndex((d) => d.id === view.dayId)
       const planView: View = { name: 'plan', planId: plan.id }
       const names = data.plans.flatMap((p) =>
@@ -255,7 +294,7 @@ function App() {
           suggestions={[...new Set(names)]}
           onStartWorkout={() => startWorkout(plan, plan.days[dayIndex])}
           onOpenProgress={(exerciseName) =>
-            setView({ name: 'exerciseProgress', exerciseName, backView: view })
+            goTo({ name: 'exerciseProgress', exerciseName, backView: view })
           }
           onChange={(next) =>
             updatePlan({
@@ -268,9 +307,9 @@ function App() {
               ...plan,
               days: plan.days.filter((d) => d.id !== view.dayId),
             })
-            setView(planView)
+            goBackTo(planView)
           }}
-          onBack={() => setView(planView)}
+          onBack={() => goBackTo(planView)}
         />
       )
     }
@@ -284,9 +323,9 @@ function App() {
           onDuplicate={() => addPlan(duplicatePlan(plan))}
           onDelete={() => deletePlan(plan.id)}
           onOpenDay={(dayId) =>
-            setView({ name: 'day', planId: plan.id, dayId })
+            goTo({ name: 'day', planId: plan.id, dayId })
           }
-          onBack={() => setView(HOME)}
+          onBack={() => goBackTo(HOME)}
         />
       )
     }
@@ -295,11 +334,11 @@ function App() {
       <HomePage
         data={data}
         onCreatePlan={(name, daysCount) => addPlan(createPlan(name, daysCount))}
-        onOpenPlan={(planId) => setView({ name: 'plan', planId })}
-        onOpenSettings={() => setView({ name: 'settings' })}
-        onOpenHistory={() => setView({ name: 'history' })}
-        onOpenProgress={() => setView({ name: 'progress' })}
-        onOpenWorkout={() => setView({ name: 'workout' })}
+        onOpenPlan={(planId) => goTo({ name: 'plan', planId })}
+        onOpenSettings={() => goTo({ name: 'settings' })}
+        onOpenHistory={() => goTo({ name: 'history' })}
+        onOpenProgress={() => goTo({ name: 'progress' })}
+        onOpenWorkout={() => goTo({ name: 'workout' })}
       />
     )
   }
