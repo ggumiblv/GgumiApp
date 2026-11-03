@@ -32,6 +32,8 @@ export type Plan = {
 export type Workout = {
   id: string
   date: string
+  planId?: string
+  dayId?: string
   planName: string
   dayName: string
   exercises: Exercise[]
@@ -80,25 +82,57 @@ export function createPlan(name: string, daysCount: number): Plan {
   }
 }
 
-export function createWorkout(planName: string, day: Day): Workout {
+export function createWorkout(plan: Plan, day: Day): Workout {
   return {
     id: crypto.randomUUID(),
     date: new Date().toISOString(),
-    planName,
+    planId: plan.id,
+    dayId: day.id,
+    planName: plan.name,
     dayName: day.name,
-    exercises: copyExercises(day.exercises),
+    // id упражнения не меняем: по нему результат вернётся в план
+    exercises: day.exercises.map((exercise) => ({
+      ...exercise,
+      sets: copySets(exercise.sets),
+    })),
   }
+}
+
+// Последний результат становится новыми значениями в плане.
+// Упражнение без подходов считаем пропущенным и оставляем как было.
+export function applyWorkoutToPlans(plans: Plan[], workout: Workout): Plan[] {
+  return plans.map((plan) => {
+    if (plan.id !== workout.planId) return plan
+    return touchPlan({
+      ...plan,
+      days: plan.days.map((day) => {
+        if (day.id !== workout.dayId) return day
+        return {
+          ...day,
+          exercises: day.exercises.map((exercise) => {
+            const done = workout.exercises.find((e) => e.id === exercise.id)
+            if (!done || done.sets.length === 0) return exercise
+            return { ...exercise, sets: copySets(done.sets) }
+          }),
+        }
+      }),
+    })
+  })
 }
 
 export function touchPlan(plan: Plan): Plan {
   return { ...plan, updatedAt: new Date().toISOString() }
 }
 
+function copySets(sets: WorkoutSet[]): WorkoutSet[] {
+  return sets.map((set) => ({ ...set, id: crypto.randomUUID() }))
+}
+
 function copyExercises(exercises: Exercise[]): Exercise[] {
   return exercises.map((exercise) => ({
     ...exercise,
     id: crypto.randomUUID(),
-    sets: exercise.sets.map((set) => ({ ...set, id: crypto.randomUUID() })),
+    sets: copySets(exercise.sets),
   }))
 }
 

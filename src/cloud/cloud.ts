@@ -19,7 +19,10 @@ async function loadServices(config: FirebaseOptions) {
     import('firebase/firestore/lite'),
   ])
   const firebaseApp = app.initializeApp(config)
-  const auth = authSdk.getAuth(firebaseApp)
+  // Вход только по почте: скрипт Google для всплывающих окон не загружаем
+  const auth = authSdk.initializeAuth(firebaseApp, {
+    persistence: authSdk.indexedDBLocalPersistence,
+  })
   const db = firestoreSdk.getFirestore(firebaseApp)
   if (useEmulator) {
     authSdk.connectAuthEmulator(auth, 'http://127.0.0.1:9099', {

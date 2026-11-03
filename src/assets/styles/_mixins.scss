@@ -42,3 +42,20 @@
   border-radius: $radius-m;
   background: $color-surface;
 }
+
+// Плавное раскрытие блока неизвестного размера, открытое состояние — класс .is-open
+@mixin collapsible($property: grid-template-rows) {
+  display: grid;
+  #{$property}: 0fr;
+  transition: #{$property} $transition-collapse;
+
+  &.is-open {
+    #{$property}: 1fr;
+  }
+
+  > * {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+}

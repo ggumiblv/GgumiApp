@@ -10,6 +10,7 @@ import SettingsPage from './pages/SettingsPage/SettingsPage'
 import WorkoutDetailPage from './pages/WorkoutDetailPage/WorkoutDetailPage'
 import WorkoutPage from './pages/WorkoutPage/WorkoutPage'
 import {
+  applyWorkoutToPlans,
   createEmptyData,
   createPlan,
   createWorkout,
@@ -107,12 +108,12 @@ function App() {
       .catch(() => setMessage('Не удалось сохранить файл'))
   }
 
-  function startWorkout(planName: string, day: Day) {
+  function startWorkout(plan: Plan, day: Day) {
     // Незавершённая тренировка важнее новой, её легко потерять
     if (data.activeWorkout) {
       setMessage('Сначала завершите текущую тренировку')
     } else {
-      updateData({ ...data, activeWorkout: createWorkout(planName, day) })
+      updateData({ ...data, activeWorkout: createWorkout(plan, day) })
     }
     setView({ name: 'workout' })
   }
@@ -158,6 +159,7 @@ function App() {
               ...data,
               activeWorkout: null,
               workouts: [...data.workouts, active],
+              plans: applyWorkoutToPlans(data.plans, active),
             })
             setView({ name: 'workoutDetail', workoutId: active.id })
             setMessage('Тренировка сохранена')
@@ -218,7 +220,7 @@ function App() {
           dayNumber={dayIndex + 1}
           daysCount={plan.days.length}
           suggestions={[...new Set(names)]}
-          onStartWorkout={() => startWorkout(plan.name, plan.days[dayIndex])}
+          onStartWorkout={() => startWorkout(plan, plan.days[dayIndex])}
           onChange={(next) =>
             updatePlan({
               ...plan,

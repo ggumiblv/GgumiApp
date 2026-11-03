@@ -36,9 +36,7 @@ function DayPage({
 }: DayPageProps) {
   const [actions, setActions] = useState<ActionsMode>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const [openExerciseId, setOpenExerciseId] = useState<string | null>(
-    day.exercises[0]?.id ?? null,
-  )
+  const [openExerciseId, setOpenExerciseId] = useState<string | null>(null)
 
   function changeExercises(exercises: Exercise[]) {
     onChange({ ...day, exercises })

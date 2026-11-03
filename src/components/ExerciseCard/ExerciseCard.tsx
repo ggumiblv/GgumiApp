@@ -25,6 +25,7 @@ function ExerciseCard({
   onDelete,
 }: ExerciseCardProps) {
   const [actions, setActions] = useState<ActionsMode>(null)
+  const openClass = isOpen ? 'is-open' : ''
 
   return (
     <section className="exercise">
@@ -37,29 +38,33 @@ function ExerciseCard({
         >
           <span>
             <strong>{exercise.name}</strong>
-            {!isOpen && (
+            <span className={`exercise__summary ${isOpen ? '' : 'is-open'}`}>
               <span className="muted small">{exerciseSummary(exercise)}</span>
-            )}
+            </span>
           </span>
           <img className={isOpen ? 'is-flipped' : ''} src={chevronIcon} alt="" />
         </button>
-        {isOpen && (
-          <IconButton
-            icon={moreIcon}
-            label="Действия с упражнением"
-            onClick={() => setActions('menu')}
-          />
-        )}
+        <div className={`exercise__more ${openClass}`} inert={!isOpen}>
+          <div>
+            <IconButton
+              icon={moreIcon}
+              label="Действия с упражнением"
+              onClick={() => setActions('menu')}
+            />
+          </div>
+        </div>
       </div>
 
-      {isOpen && (
-        <div className="exercise__body">
-          <SetList
-            sets={exercise.sets}
-            onChange={(sets) => onChange({ ...exercise, sets })}
-          />
+      <div className={`exercise__body ${openClass}`} inert={!isOpen}>
+        <div>
+          <div className="exercise__sets">
+            <SetList
+              sets={exercise.sets}
+              onChange={(sets) => onChange({ ...exercise, sets })}
+            />
+          </div>
         </div>
-      )}
+      </div>
 
       <ItemActions
         mode={actions}

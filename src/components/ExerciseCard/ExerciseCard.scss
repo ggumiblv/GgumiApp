@@ -29,12 +29,29 @@
       min-width: 0;
     }
 
-    img.is-flipped {
+    > img {
+      transition: transform $transition-collapse;
+    }
+
+    > img.is-flipped {
       transform: rotate(180deg);
     }
   }
 
+  &__summary {
+    @include collapsible;
+  }
+
+  &__more {
+    @include collapsible(grid-template-columns);
+    flex-shrink: 0;
+  }
+
   &__body {
+    @include collapsible;
+  }
+
+  &__sets {
     @include stack($space-xs);
     padding: 0 $space-s $space-xs;
   }
