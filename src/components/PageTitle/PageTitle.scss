@@ -1,0 +1,13 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.page-title {
+  @include stack($space-2xs);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-xs;
+  }
+}

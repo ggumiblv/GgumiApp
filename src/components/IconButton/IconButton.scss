@@ -1,0 +1,17 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.icon-button {
+  @include reset-button;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: $control-height;
+  height: $control-height;
+
+  &--round {
+    border-radius: 50%;
+    background: $color-surface-raised;
+  }
+}

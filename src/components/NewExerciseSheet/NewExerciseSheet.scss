@@ -1,0 +1,23 @@
+@use '../../assets/styles/variables' as *;
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+}
+
+.chip {
+  min-height: 36px;
+  padding: 0 $space-s;
+  border: 0;
+  border-radius: 18px;
+  font: inherit;
+  font-size: $font-size-small;
+  color: $color-text;
+  background: $color-surface-raised;
+}
+
+.stepper-group {
+  border: 1px solid $color-border;
+  border-radius: $radius-m;
+}

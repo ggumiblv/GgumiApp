@@ -1,0 +1,38 @@
+@use 'variables' as *;
+
+@mixin tablet {
+  @media (min-width: $breakpoint-tablet) {
+    @content;
+  }
+}
+
+@mixin stack($gap: $space-s) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+@mixin control {
+  min-height: $control-height;
+  border-radius: $radius-m;
+  // iOS увеличивает страницу при фокусе на поле со шрифтом меньше 16px
+  font: inherit;
+  font-size: 16px;
+  color: $color-text;
+}
+
+@mixin reset-button {
+  padding: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+}
+
+@mixin overlay-card {
+  @include stack;
+  width: 100%;
+  padding: $space-l;
+  background: $color-surface;
+}

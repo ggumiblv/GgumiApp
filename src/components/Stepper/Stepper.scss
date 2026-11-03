@@ -1,0 +1,29 @@
+@use '../../assets/styles/variables' as *;
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-2xs $space-xs $space-2xs $space-m;
+
+  & + & {
+    border-top: 1px solid $color-border;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+  }
+
+  &__value {
+    width: 72px;
+    font-weight: 600;
+    text-align: center;
+
+    small {
+      font-size: $font-size-eyebrow;
+      font-weight: 400;
+      color: $color-text-muted;
+    }
+  }
+}

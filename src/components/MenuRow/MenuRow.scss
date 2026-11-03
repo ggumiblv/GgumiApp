@@ -1,0 +1,25 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.menu-row {
+  @include reset-button;
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  min-height: 52px;
+  padding: $space-s $space-m;
+
+  & + & {
+    border-top: 1px solid $color-border;
+  }
+
+  &--danger {
+    color: $color-danger;
+  }
+
+  &__text {
+    @include stack(2px);
+    flex: 1;
+    min-width: 0;
+  }
+}

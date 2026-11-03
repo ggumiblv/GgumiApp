@@ -1,0 +1,55 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.exercise {
+  border: 1px solid $color-border;
+  border-radius: $radius-m;
+  background: $color-surface;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    padding-right: $space-2xs;
+  }
+
+  &__toggle {
+    @include reset-button;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-s;
+    min-width: 0;
+    min-height: 56px;
+    padding: $space-s $space-m;
+    overflow-wrap: anywhere;
+
+    > span {
+      @include stack(2px);
+      min-width: 0;
+    }
+
+    img.is-flipped {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__body {
+    @include stack($space-xs);
+    padding: 0 $space-s $space-xs;
+  }
+}
+
+.set-labels {
+  display: grid;
+  grid-template-columns: $set-grid;
+  column-gap: $space-2xs;
+
+  span:first-child {
+    grid-column: 2;
+  }
+
+  span:last-child {
+    grid-column: 4;
+  }
+}

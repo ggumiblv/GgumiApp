@@ -1,0 +1,33 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.list-card {
+  @include reset-button;
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  width: 100%;
+  padding: $space-s $space-m;
+  border: 1px solid $color-border;
+  border-radius: $radius-m;
+  background: $color-surface;
+
+  &__number {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: $radius-s;
+    font-weight: 600;
+    background: $color-surface-raised;
+  }
+
+  &__text {
+    @include stack($space-2xs);
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

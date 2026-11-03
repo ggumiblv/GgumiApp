@@ -1,0 +1,25 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.back-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: $control-height;
+
+  &__link {
+    @include reset-button;
+    display: flex;
+    align-items: center;
+    gap: $space-2xs;
+    min-width: 0;
+    min-height: $control-height;
+    color: $color-text-muted;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

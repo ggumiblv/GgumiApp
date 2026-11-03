@@ -1,0 +1,34 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.title-large {
+  font-size: 22px;
+}
+
+.source {
+  display: flex;
+  align-items: center;
+  gap: $space-s;
+  padding: $space-s;
+  border: 1px solid $color-border;
+  border-radius: $radius-m;
+  cursor: pointer;
+
+  &.is-active {
+    border-color: $color-text;
+    background: $color-surface-raised;
+  }
+
+  &__text {
+    @include stack(2px);
+    flex: 1;
+    min-width: 0;
+  }
+
+  input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: $color-text;
+  }
+}

@@ -1,121 +1,190 @@
-import { useEffect, useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
+import { useEffect, useState } from 'react'
+import WelcomeModal from './components/WelcomeModal/WelcomeModal'
+import DayPage from './pages/DayPage/DayPage'
+import HomePage from './pages/HomePage/HomePage'
+import PlanPage from './pages/PlanPage/PlanPage'
+import SettingsPage from './pages/SettingsPage/SettingsPage'
 import {
   createEmptyData,
+  createPlan,
+  duplicatePlan,
   exportToFile,
   loadData,
-  parseDataFile,
   saveData,
+  touchPlan,
 } from './storage'
-import type { AppData } from './storage'
+import type { AppData, Plan } from './storage'
+import './App.scss'
 
-type Status = 'loading' | 'empty' | 'ready' | 'failed'
+type Status = 'loading' | 'ready' | 'failed'
+
+type View =
+  | { name: 'home' }
+  | { name: 'settings' }
+  | { name: 'plan'; planId: string }
+  | { name: 'day'; planId: string; dayId: string }
+
+const HOME: View = { name: 'home' }
 
 function App() {
   const [status, setStatus] = useState<Status>('loading')
-  const [data, setData] = useState<AppData | null>(null)
+  const [data, setData] = useState<AppData>(createEmptyData)
+  const [view, setView] = useState<View>(HOME)
   const [message, setMessage] = useState('')
-  const fileInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadData()
       .then((stored) => {
-        setData(stored)
-        setStatus(stored ? 'ready' : 'empty')
+        if (stored) setData(stored)
+        setStatus('ready')
       })
       .catch(() => setStatus('failed'))
   }, [])
 
-  async function applyData(next: AppData) {
-    await saveData(next)
+  useEffect(() => {
+    if (!message) return
+    const timer = setTimeout(() => setMessage(''), 3000)
+    return () => clearTimeout(timer)
+  }, [message])
+
+  function updateData(next: AppData) {
     setData(next)
-    setStatus('ready')
+    saveData(next).catch(() => setMessage('Не удалось сохранить данные'))
   }
 
-  async function handleCreate() {
-    try {
-      await applyData(createEmptyData())
-      setMessage('')
-    } catch {
-      setMessage('Не удалось сохранить данные')
+  function updatePlan(next: Plan) {
+    const plan = touchPlan(next)
+    updateData({
+      ...data,
+      plans: data.plans.map((p) => (p.id === plan.id ? plan : p)),
+    })
+  }
+
+  function deletePlan(id: string) {
+    updateData({ ...data, plans: data.plans.filter((p) => p.id !== id) })
+    setView(HOME)
+  }
+
+  function addPlan(plan: Plan) {
+    updateData({ ...data, plans: [...data.plans, plan] })
+    setView({ name: 'plan', planId: plan.id })
+  }
+
+  function handleImport(next: AppData) {
+    updateData(next)
+    setView(HOME)
+    setMessage(next.name ? 'Данные восстановлены' : 'Введите имя, чтобы продолжить')
+  }
+
+  function handleExport() {
+    exportToFile(data)
+      .then((isSaved) => {
+        if (isSaved) {
+          updateData({ ...data, lastBackupAt: new Date().toISOString() })
+        }
+      })
+      .catch(() => setMessage('Не удалось сохранить файл'))
+  }
+
+  const handleImportError = () => setMessage('Не удалось прочитать файл')
+
+  function renderPage() {
+    if (view.name === 'settings') {
+      return (
+        <SettingsPage
+          data={data}
+          onRename={(name) => updateData({ ...data, name })}
+          onExport={handleExport}
+          onImport={handleImport}
+          onImportError={handleImportError}
+          onDeleteAll={() => {
+            updateData(createEmptyData())
+            setView(HOME)
+          }}
+          onBack={() => setView(HOME)}
+        />
+      )
     }
-  }
 
-  async function handleExport() {
-    if (!data) return
-    try {
-      await exportToFile(data)
-      setMessage('')
-    } catch {
-      setMessage('Не удалось сохранить файл')
+    const plan =
+      view.name !== 'home' && data.plans.find((p) => p.id === view.planId)
+
+    if (plan && view.name === 'day') {
+      const dayIndex = plan.days.findIndex((d) => d.id === view.dayId)
+      const planView: View = { name: 'plan', planId: plan.id }
+      const names = data.plans.flatMap((p) =>
+        p.days.flatMap((d) => d.exercises.map((e) => e.name)),
+      )
+      return (
+        <DayPage
+          key={view.dayId}
+          planName={plan.name}
+          day={plan.days[dayIndex]}
+          dayNumber={dayIndex + 1}
+          daysCount={plan.days.length}
+          suggestions={[...new Set(names)]}
+          onChange={(next) =>
+            updatePlan({
+              ...plan,
+              days: plan.days.map((d) => (d.id === next.id ? next : d)),
+            })
+          }
+          onDelete={() => {
+            updatePlan({
+              ...plan,
+              days: plan.days.filter((d) => d.id !== view.dayId),
+            })
+            setView(planView)
+          }}
+          onBack={() => setView(planView)}
+        />
+      )
     }
-  }
 
-  function handleImportClick() {
-    if (data && !window.confirm('Заменить текущие данные данными из файла?')) {
-      return
+    if (plan) {
+      return (
+        <PlanPage
+          key={plan.id}
+          plan={plan}
+          onChange={updatePlan}
+          onDuplicate={() => addPlan(duplicatePlan(plan))}
+          onDelete={() => deletePlan(plan.id)}
+          onOpenDay={(dayId) =>
+            setView({ name: 'day', planId: plan.id, dayId })
+          }
+          onBack={() => setView(HOME)}
+        />
+      )
     }
-    fileInput.current?.click()
-  }
 
-  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    // Сброс позволяет выбрать тот же файл повторно
-    event.target.value = ''
-    if (!file) return
-    try {
-      await applyData(await parseDataFile(file))
-      setMessage('Данные восстановлены')
-    } catch {
-      setMessage('Не удалось прочитать файл')
-    }
+    return (
+      <HomePage
+        data={data}
+        onCreatePlan={(name, daysCount) => addPlan(createPlan(name, daysCount))}
+        onOpenPlan={(planId) => setView({ name: 'plan', planId })}
+        onOpenSettings={() => setView({ name: 'settings' })}
+      />
+    )
   }
-
-  if (status === 'loading') return null
 
   return (
     <main className="app">
-      <h1>GgumiApp</h1>
-
-      {status === 'failed' && <p>Не удалось открыть хранилище данных</p>}
-
-      {status === 'empty' && (
-        <>
-          <p>Данных пока нет</p>
-          <div className="actions">
-            <button type="button" onClick={handleCreate}>
-              Начать с нуля
-            </button>
-            <button type="button" onClick={handleImportClick}>
-              Восстановить из файла
-            </button>
-          </div>
-        </>
+      <div className="container">
+        {status === 'failed' && <p>Не удалось открыть данные приложения</p>}
+        {status === 'ready' && data.name && renderPage()}
+        {status === 'ready' && !data.name && (
+          <WelcomeModal
+            onStart={(name) => updateData({ ...data, name })}
+            onImport={handleImport}
+            onImportError={handleImportError}
+          />
+        )}
+      </div>
+      {message && (
+        <p className="toast" role="status">
+          {message}
+        </p>
       )}
-
-      {status === 'ready' && (
-        <>
-          <p>Здесь будут твои тренировки</p>
-          <div className="actions">
-            <button type="button" onClick={handleExport}>
-              Сохранить в файл
-            </button>
-            <button type="button" onClick={handleImportClick}>
-              Восстановить из файла
-            </button>
-          </div>
-        </>
-      )}
-
-      {message && <p role="status">{message}</p>}
-
-      <input
-        ref={fileInput}
-        type="file"
-        accept=".json,application/json"
-        hidden
-        onChange={handleFileChange}
-      />
     </main>
   )
 }

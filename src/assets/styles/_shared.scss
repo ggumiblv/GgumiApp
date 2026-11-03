@@ -1,0 +1,53 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.round-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: $color-surface-raised;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $color-border;
+  border-radius: $radius-m;
+  background: $color-surface;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  overflow-y: auto;
+  background: $color-overlay;
+
+  &--solid {
+    background: #000000;
+  }
+
+  &--center {
+    align-items: center;
+    justify-content: center;
+    padding: calc(env(safe-area-inset-top) + #{$space-m}) $space-m
+      calc(env(safe-area-inset-bottom) + #{$space-m});
+  }
+
+  &--sheet {
+    align-items: flex-end;
+    justify-content: center;
+  }
+}
+
+.dialog {
+  @include overlay-card;
+  max-width: $dialog-width;
+  margin: auto;
+  border: 1px solid $color-border;
+  border-radius: $radius-l;
+}

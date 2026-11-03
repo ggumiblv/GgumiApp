@@ -11,10 +11,10 @@
 
 Service worker работает только в собранной версии, поэтому офлайн проверяется через `build` и `preview`, а не через `dev`.
 
-Иконки генерируются из `public/icon.svg`:
+Иконки приложения генерируются из `src/assets/icons/app/icon.svg`:
 
 ```sh
-npx @vite-pwa/assets-generator --preset minimal-2023 public/icon.svg
+npx @vite-pwa/assets-generator --preset minimal-2023 src/assets/icons/app/icon.svg
 ```
 
 ## Установка на iPhone

@@ -1,0 +1,26 @@
+@use '../../assets/styles/variables' as *;
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: $space-2xs;
+  padding: $space-2xs;
+  border-radius: $radius-m;
+  background: $color-surface-raised;
+
+  button {
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: $radius-s;
+    font: inherit;
+    color: $color-text-muted;
+    background: none;
+
+    &.is-active {
+      font-weight: 600;
+      color: $color-background;
+      background: $color-text;
+    }
+  }
+}

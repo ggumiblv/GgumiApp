@@ -1,0 +1,31 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.sheet {
+  @include overlay-card;
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: $space-xs $space-m calc(env(safe-area-inset-bottom) + #{$space-m});
+  border-radius: $radius-l $radius-l 0 0;
+
+  @include tablet {
+    max-width: $sheet-width-tablet;
+  }
+
+  &__handle {
+    flex-shrink: 0;
+    align-self: center;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: $color-border;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-s;
+    min-height: $control-height;
+  }
+}

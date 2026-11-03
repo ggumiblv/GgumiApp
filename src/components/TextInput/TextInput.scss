@@ -1,0 +1,28 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.field {
+  @include stack($space-xs);
+
+  &__label {
+    font-size: $font-size-small;
+    color: $color-text-muted;
+  }
+}
+
+.text-input {
+  @include control;
+  width: 100%;
+  padding: 0 $space-s;
+  border: 1px solid $color-border;
+  background: $color-surface-raised;
+
+  &:focus {
+    border-color: $color-text;
+    outline: none;
+  }
+
+  &::placeholder {
+    color: $color-text-muted;
+  }
+}

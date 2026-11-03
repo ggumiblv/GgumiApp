@@ -1,0 +1,62 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.35;
+  color: $color-text;
+  background: $color-background;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+button {
+  cursor: pointer;
+}
+
+.stack {
+  @include stack;
+}
+
+.muted {
+  color: $color-text-muted;
+}
+
+.small {
+  font-size: $font-size-small;
+}
+
+.center {
+  text-align: center;
+}
+
+.eyebrow {
+  font-size: $font-size-eyebrow;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+}

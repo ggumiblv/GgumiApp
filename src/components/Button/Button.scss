@@ -1,0 +1,44 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.button {
+  @include control;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xs;
+  width: 100%;
+  padding: 0 $space-m;
+  border: 0;
+  font-weight: 500;
+
+  &--primary {
+    color: $color-background;
+    background: $color-text;
+  }
+
+  &--secondary {
+    background: $color-surface-raised;
+  }
+
+  &--dashed {
+    border: 1px dashed $color-border;
+    color: $color-text-muted;
+    background: none;
+  }
+
+  &--danger {
+    color: $color-danger;
+    background: $color-surface-raised;
+  }
+
+  &--ghost {
+    background: none;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}

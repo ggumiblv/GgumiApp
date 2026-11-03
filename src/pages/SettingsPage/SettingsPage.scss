@@ -1,0 +1,13 @@
+@use '../../assets/styles/variables' as *;
+
+.note {
+  display: flex;
+  gap: $space-s;
+  padding: $space-s $space-m;
+  border-radius: $radius-m;
+  background: $color-surface;
+
+  img {
+    flex-shrink: 0;
+  }
+}

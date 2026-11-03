@@ -1,0 +1,40 @@
+@use './assets/styles/variables' as *;
+@use './assets/styles/mixins' as *;
+
+.toast {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + #{$space-m});
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - #{$space-xl});
+  padding: $space-xs $space-m;
+  border: 1px solid $color-border;
+  border-radius: $radius-m;
+  font-size: $font-size-small;
+  background: $color-surface-raised;
+  transform: translateX(-50%);
+}
+
+.app {
+  display: flex;
+  min-height: 100dvh;
+  padding: calc(env(safe-area-inset-top) + #{$space-m}) $space-m
+    calc(env(safe-area-inset-bottom) + #{$space-m});
+
+  @include tablet {
+    padding-right: $space-xl;
+    padding-left: $space-xl;
+  }
+}
+
+.container {
+  @include stack;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  margin: 0 auto;
+
+  @include tablet {
+    max-width: $container-tablet;
+  }
+}

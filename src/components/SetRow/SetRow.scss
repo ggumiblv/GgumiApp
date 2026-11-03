@@ -1,0 +1,23 @@
+@use '../../assets/styles/variables' as *;
+
+.set-row {
+  display: grid;
+  grid-template-columns: $set-grid;
+  align-items: center;
+  column-gap: $space-2xs;
+
+  &__number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    border-radius: 50%;
+    font-size: $font-size-eyebrow;
+    color: $color-text-muted;
+    background: $color-surface-raised;
+  }
+
+  .icon-button {
+    width: 36px;
+  }
+}

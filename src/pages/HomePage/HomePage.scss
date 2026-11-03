@@ -1,0 +1,35 @@
+@use '../../assets/styles/variables' as *;
+@use '../../assets/styles/mixins' as *;
+
+.home-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-s;
+  margin-top: $space-s;
+}
+
+.plan-grid {
+  display: grid;
+  gap: $space-s;
+
+  @include tablet {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.page-footer {
+  position: sticky;
+  bottom: calc(env(safe-area-inset-bottom) + #{$space-m});
+  margin-top: auto;
+  padding-top: $space-s;
+}
+
+.empty {
+  @include stack;
+  align-items: center;
+  padding: $space-xl $space-m $space-m;
+  border: 1px dashed $color-border;
+  border-radius: $radius-l;
+  text-align: center;
+}

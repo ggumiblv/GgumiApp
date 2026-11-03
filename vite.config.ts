@@ -5,6 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/GgumiApp/',
+  // Иконки установки должны попадать в сборку с постоянными именами файлов
+  publicDir: 'src/assets/icons/app',
   plugins: [
     react(),
     VitePWA({
